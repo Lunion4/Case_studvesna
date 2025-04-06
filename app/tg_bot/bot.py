@@ -1,7 +1,7 @@
 import telebot
 import requests
 
-TOKEN = '7856201686:AAH8fwWtg566H7A-aLDTifteHmvStraUMw4'
+TOKEN = ''
 SERVER_URL = "https://opensource.pythonanywhere.com/update_telegram"  # Адрес API сервера
 bot = telebot.TeleBot(TOKEN)
 
