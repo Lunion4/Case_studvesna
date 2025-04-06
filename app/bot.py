@@ -2,8 +2,22 @@ import telebot
 import requests
 
 TOKEN = ''
-SERVER_URL = "https://opensource.pythonanywhere.com/update_telegram"  # Адрес API сервера
+SERVER_URL = "http://127.0.0.1:5000/update_telegram"  # Адрес API сервера
 bot = telebot.TeleBot(TOKEN)
+
+def send_telegram_message(telegram_id, text):
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    payload = {
+        'chat_id': telegram_id,
+        'text': text,
+        'parse_mode': 'HTML',
+    }
+    try:
+        response = requests.post(url, data=payload)
+        response.raise_for_status()
+    except Exception as e:
+        print(f"Ошибка при отправке Telegram-сообщения: {e}")
+
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
@@ -23,4 +37,11 @@ def handle_start(message):
     else:
         bot.send_message(telegram_id, "Привет! Чтобы привязать Telegram к аккаунту, нажмите кнопку на сайте.")
 
-bot.polling()
+
+
+if __name__ == '__main__':
+    print("Бот запущен...")
+    try:
+        bot.polling(none_stop=True)
+    except Exception as e:
+        print(f"Ошибка при запуске бота: {e}")

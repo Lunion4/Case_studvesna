@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Профиль</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .btn-container {
+            display: flex;
+            gap: 10px; /* Добавляем отступы между кнопками */
+            margin-top: 20px; /* Добавляем верхний отступ для кнопок */
+        }
+    </style>
 </head>
 <body>
 <div class="container mt-5">
@@ -13,14 +20,21 @@
     {% if user %}
         <p><strong>Логин: </strong>{{ user.username }}</p>
         {% if user.telegram_id %}
-            <p><strong>Telegram: </strong>{{ user.telegram_id }}</p>
+            <p><strong>Telegram id: </strong>{{ user.telegram_id }}</p>
         {% else %}
             <p>Чтобы подключить уведомления, перейдите в Telegram и нажмите на кнопку ниже для привязки вашего аккаунта:</p>
-            <a href="https://t.me/haka_ton_bot?start={{ user.id }}" class="btn btn-primary">Привязать Telegram</a>
+            <div class="btn-container">
+                <a href="https://t.me/haka_ton_bot?start={{ user.id }}" class="btn btn-primary">Привязать Telegram</a>
+            </div>
         {% endif %}
     {% endif %}
 
-    <a href="{{ url_for('get_projects') }}" class="btn btn-primary mt-4">Назад к проектам</a>
+    <div class="btn-container">
+        <a href="{{ url_for('get_projects') }}" class="btn btn-primary">Назад к проектам</a>
+    </div>
+    <div class="btn-container">
+        <a href="{{ url_for('logout') }}" class="btn btn-primary">Выйти</a>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
