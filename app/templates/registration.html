@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Вход в систему</title>
+    <title>Регистрация</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,7 +14,7 @@
             height: 100vh;
             margin: 0;
         }
-        .login-container {
+        .registration-container {
             background-color: white;
             padding: 30px;
             border-radius: 8px;
@@ -66,8 +66,8 @@
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h1>Вход в систему</h1>
+    <div class="registration-container">
+        <h1>Регистрация</h1>
 
         {% with messages = get_flashed_messages() %}
             {% if messages %}
@@ -79,14 +79,14 @@
             {% endif %}
         {% endwith %}
 
-        <form action="/login" method="POST">
+        <form action="/registration" method="POST">
             <div class="form-group">
                 <label for="username">Имя пользователя</label>
                 <input type="text" id="username" name="username" required placeholder="Введите ваше имя">
             </div>
-            <button type="submit">Войти</button>
+            <button type="submit">Зарегистрироваться</button>
         </form>
-        <h5 style="margin-top: 30px;"> Нет аккаунта? <a style="text-decoration: none;" href="/registration">Зарегистрируйся</a> </h5>
+        <h5 style="margin-top: 30px;"> Уже есть аккаунт? <a style="text-decoration: none;" href="/login">Войти</a> </h5>
     </div>
 </body>
 </html>

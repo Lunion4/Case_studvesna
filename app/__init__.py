@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO, emit, join_room
 from datetime import datetime
@@ -40,6 +40,55 @@ class Message(db.Model):
     # Добавляем связь с User
     user = db.relationship('User', backref='messages')
 
+# Страница профиля
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user = User.query.get(session['user_id'])
+    return render_template('profile.html', user=user)
+
+# Привязка через Telegram
+@app.route('/bind_telegram', methods=['POST'])
+def bind_telegram():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user = User.query.get(session['user_id'])
+    telegram_id = request.form['telegram_id']  # Telegram ID получаем из формы
+
+    # Привязываем Telegram ID к пользователю в базе данных
+    user.telegram_id = telegram_id
+    db.session.commit()
+
+    flash('Telegram аккаунт привязан успешно!', 'success')
+    return redirect(url_for('profile'))
+
+
+# Страница регистрации
+@app.route('/registration', methods=['GET', 'POST'])
+def registration():
+    if request.method == 'GET':
+        return render_template('registration.html')
+
+    username = request.form.get('username')
+
+    if not username:
+        flash('Введите имя пользователя')
+        return redirect(url_for('registration'))
+
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        flash('Такой пользователь уже существует')
+        return redirect(url_for('registration'))
+
+    new_user = User(username=username)
+    db.session.add(new_user)
+    db.session.commit()
+
+    session['user_id'] = new_user.id  # Записываем ID пользователя в сессию
+    return redirect(url_for('get_projects'))
 
 # Логика регистрации и логина
 @app.route('/login', methods=['GET', 'POST'])
@@ -47,13 +96,16 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         user = User.query.filter_by(username=username).first()
+
         if not user:
-            user = User(username=username)
-            db.session.add(user)
-            db.session.commit()
+            flash('Пользователь не найден. Пройдите регистрацию.', 'error')
+            return redirect(url_for('login'))
+
         session['user_id'] = user.id  # Запоминаем пользователя в сессии
         return redirect(url_for('get_projects'))
+
     return render_template('login.html')
+
 
 
 @app.route('/logout')
@@ -105,53 +157,28 @@ def chat(project_id):
     } for message, user in messages]
 
     return render_template('chat.html',
-                           messages=messages_data,
-                           project_id=project_id,
-                           username=user.username,
-                           user_id=user.id)
+        messages=messages_data,
+        project_id=project_id,
+        username=user.username,
+        user_id=user.id)
 
+from flask import jsonify
 
-# Обработка подключения к чату
-@socketio.on('join')
-def handle_join(data):
-    room = f"chat_{data['project_id']}"
-    join_room(room)
-    emit('status', {'msg': f"Пользователь {data['username']} присоединился к чату."}, room=room)
+@app.route('/update_telegram', methods=['POST'])
+def update_telegram():
+    """Эндпоинт для обновления Telegram ID пользователя."""
+    data = request.json
+    user_id = data.get('user_id')
+    telegram_id = data.get('telegram_id')
 
-    # Отправляем все старые сообщения
-    chat = Chat.query.filter_by(project_id=data['project_id']).first()
-    if chat:
-        messages = [{'username': msg.user.username, 'content': msg.content, 'timestamp': str(msg.timestamp)} for msg in
-                    chat.messages]
-        emit('load_messages', {'messages': messages}, room=room)
-
-
-# Обработка отправки сообщений
-@socketio.on('send_message')
-def handle_send_message(data):
-    # Находим чат проекта
-    chat = Chat.query.filter_by(project_id=data['project_id']).first()
-    if not chat:
-        chat = Chat(project_id=data['project_id'])
-        db.session.add(chat)
+    user = db.session.get(User, user_id)  # Новый способ вместо User.query.get(user_id)
+    if user:
+        user.telegram_id = telegram_id
         db.session.commit()
+        return jsonify({"success": True, "message": "Telegram ID успешно обновлен"}), 200
+    else:
+        return jsonify({"success": False, "message": "Пользователь не найден"}), 404
 
-    # Создаем сообщение
-    message = Message(
-        chat_id=chat.id,
-        user_id=data['user_id'],
-        content=data['content']
-    )
-    db.session.add(message)
-    db.session.commit()
-
-    # Отправляем в комнату проекта
-    room = f"chat_{data['project_id']}"
-    emit('new_message', {
-        'username': data['username'],
-        'content': data['content'],
-        'timestamp': str(message.timestamp)
-    }, room=room)
 
 
 with app.app_context():
