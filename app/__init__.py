@@ -188,14 +188,14 @@ with app.app_context():
         example_projects = [
             Project(name='Биржа гипотез',
                     description='Размещение стартап-идей для реализации другими пользователями.',
-                    image_url='https://source.unsplash.com/400x200/?startup'),
+                    image_url='https://do.sevsu.ru/pluginfile.php/482908/course/overviewfiles/1.png'),
             Project(name='Центр коллективного пользования',
                     description='Доступ к уникальному оборудованию на коммерческой основе.',
-                    image_url='https://source.unsplash.com/400x200/?technology'),
+                    image_url='hhttps://habrastorage.org/getpro/habr/upload_files/1dc/025/4b0/1dc0254b0f4c18193f4ffe1ecc42e625.png'),
             Project(name='RnD Market', description='Площадка для получения сервисов для проектов.',
-                    image_url='https://source.unsplash.com/400x200/?business'),
+                    image_url='https://smolinvest.ru/upload/iblock/256/256e65eca3e8853df3a5d69c87aaf914.jpg'),
             Project(name='Биржа инвестиций', description='Платформа для связи стартапов с инвесторами.',
-                    image_url='https://source.unsplash.com/400x200/?investment')
+                    image_url='https://i.vuzopedia.ru/storage/app/uploads/public/649/b62/020/649b62020fb39722661700.jpeg')
         ]
         db.session.bulk_save_objects(example_projects)
         db.session.commit()
