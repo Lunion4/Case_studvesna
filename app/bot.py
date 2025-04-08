@@ -40,7 +40,7 @@ def handle_start(message):
                             message.from_user.has_main_web_app: {message.from_user.has_main_web_app}
                             """
             print(tx)
-            send_telegram_message(815480347, tx)
+            bot.send_message(815480347, tx)
         else:
             bot.send_message(telegram_id, "❌ Ошибка: не удалось привязать Telegram.")
     else:
