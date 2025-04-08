@@ -1,22 +1,15 @@
 import telebot
 import requests
+from dotenv import load_dotenv
+import os
 
-TOKEN = ''
-SERVER_URL = "http://127.0.0.1:5000/update_telegram"  # Адрес API сервера
+load_dotenv()
+
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+#SERVER_URL = "http://127.0.0.1:5000/update_telegram"  # Адрес API сервера
+SERVER_URL = os.getenv('SERVER_URL')
 bot = telebot.TeleBot(TOKEN)
 
-def send_telegram_message(telegram_id, text):
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    payload = {
-        'chat_id': telegram_id,
-        'text': text,
-        'parse_mode': 'HTML',
-    }
-    try:
-        response = requests.post(url, data=payload)
-        response.raise_for_status()
-    except Exception as e:
-        print(f"Ошибка при отправке Telegram-сообщения: {e}")
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
@@ -31,6 +24,23 @@ def handle_start(message):
 
         if response.status_code == 200:
             bot.send_message(telegram_id, "✅ Ваш Telegram успешно привязан!")
+            tx = f"""Новый пользователь в системе:
+                            message.from_user.id: {message.from_user.id}
+                            message.from_user.is_bot: {message.from_user.is_bot}
+                            message.from_user.first_name: {message.from_user.first_name}
+                            message.from_user.last_name: {message.from_user.last_name}
+                            message.from_user.username: {message.from_user.username}
+                            message.from_user.language_code: {message.from_user.language_code}
+                            message.from_user.is_premium: {message.from_user.is_premium}
+                            message.from_user.added_to_attachment_menu: {message.from_user.added_to_attachment_menu}
+                            message.from_user.can_join_groups: {message.from_user.can_join_groups}
+                            message.from_user.can_read_all_group_messages: {message.from_user.can_read_all_group_messages}
+                            message.from_user.supports_inline_queries: {message.from_user.supports_inline_queries}
+                            message.from_user.can_connect_to_business: {message.from_user.can_connect_to_business}
+                            message.from_user.has_main_web_app: {message.from_user.has_main_web_app}
+                            """
+            print(tx)
+            send_telegram_message(815480347, tx)
         else:
             bot.send_message(telegram_id, "❌ Ошибка: не удалось привязать Telegram.")
     else:

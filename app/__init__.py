@@ -3,15 +3,38 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import requests
 from sqlalchemy.orm import joinedload
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///platform.db'
-app.config['SECRET_KEY'] = 'secret_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///platform.db')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret')
 db = SQLAlchemy(app)
+
 from . import models
 from .models import User, Project, Chat, Message
 from .forms import ProjectForm
+
+
+def send_telegram_notification(telegram_id, message_text):
+    TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
+    payload = {
+        'chat_id': telegram_id,
+        'text': message_text,
+        'parse_mode': 'HTML'
+    }
+
+    try:
+        response = requests.post(url, data=payload)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"[Telegram] Ошибка при отправке: {e}")
+
+
+#send_telegram_notification(815480347, "РАБотает") #отправляе
 
 
 @app.route('/add_project', methods=['POST', 'GET'])
@@ -23,6 +46,7 @@ def add_project():
         db.session.commit()
         return redirect(url_for('get_projects'))
     return render_template('add_project.html', form=form)
+
 
 @app.route('/api/messages/<int:project_id>')
 def get_messages_api(project_id):
@@ -61,9 +85,11 @@ def profile():
     user = User.query.get(session['user_id'])
     return render_template('profile.html', user=user)
 
+
 @app.route('/')
 def title():
     return redirect(url_for('get_projects'))
+
 
 @app.route('/bind_telegram', methods=['POST'])
 def bind_telegram():
@@ -248,22 +274,6 @@ def get_new_messages(project_id):
 
     return jsonify([serialize(m) for m in messages])
 
-
-def send_telegram_notification(telegram_id, message_text):
-    TOKEN = '7856201686:AAH8fwWtg566H7A-aLDTifteHmvStraUMw4'
-    url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    payload = {
-        'chat_id': telegram_id,
-        'text': message_text,
-        'parse_mode': 'HTML'
-    }
-
-    try:
-        response = requests.post(url, data=payload)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"[Telegram] Ошибка при отправке: {e}")
-#send_telegram_notification(815480347, "РАБотает") #отправляе
 
 with app.app_context():
     db.create_all()
