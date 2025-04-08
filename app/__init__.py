@@ -3,54 +3,26 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import requests
 from sqlalchemy.orm import joinedload
-from app.bot import send_telegram_message
-from flask_login import current_user
-
 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///platform.db'
 app.config['SECRET_KEY'] = 'secret_key'
 db = SQLAlchemy(app)
+from . import models
+from .models import User, Project, Chat, Message
+from .forms import ProjectForm
 
 
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    telegram_id = db.Column(db.String(50), unique=True, nullable=True)
-
-
-class Project(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    image_url = db.Column(db.String(255), nullable=True)
-
-
-class Chat(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    messages = db.relationship('Message', backref='chat', lazy=True)
-
-
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', backref='messages')
-
-    chat_id = db.Column(db.Integer, db.ForeignKey('chat.id'), nullable=False)
-
-    reply_to_id = db.Column(db.Integer, db.ForeignKey('message.id'))
-    reply_to = db.relationship('Message', remote_side=[id])
-
-    project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    project = db.relationship('Project', backref='messages')
-
-
-
+@app.route('/add_project', methods=['POST', 'GET'])
+def add_project():
+    form = ProjectForm()
+    if form.validate_on_submit():
+        project = Project(name=form.name.data, description=form.description.data, image_url=form.image_url.data)
+        db.session.add(project)
+        db.session.commit()
+        return redirect(url_for('get_projects'))
+    return render_template('add_project.html', form=form)
 
 @app.route('/api/messages/<int:project_id>')
 def get_messages_api(project_id):
@@ -81,12 +53,17 @@ def get_messages_api(project_id):
 
 @app.route('/profile')
 def profile():
+    if User.query.get(session['user_id']) == None:
+        return redirect(url_for('logout'))
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
     user = User.query.get(session['user_id'])
     return render_template('profile.html', user=user)
 
+@app.route('/')
+def title():
+    return redirect(url_for('get_projects'))
 
 @app.route('/bind_telegram', methods=['POST'])
 def bind_telegram():
@@ -150,6 +127,8 @@ def logout():
 
 @app.route('/projects')
 def get_projects():
+    if User.query.get(session['user_id']) == None:
+        return redirect(url_for('logout'))
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
@@ -191,6 +170,8 @@ def chat(project_id):
                 replied_message = Message.query.get(reply_to_id)
                 if replied_message and replied_message.user and replied_message.user.telegram_id:
                     # Формируем текст уведомления
+                    if User.query.get(session['user_id']) == None:
+                        return redirect(url_for('logout'))
                     answer_author = user.username
                     notif_text = (
                         f"💬 <b>{answer_author}</b> ответил(а) на ваше сообщение в чате «{project.name}»:\n\n"
@@ -198,7 +179,7 @@ def chat(project_id):
                         f"{content}"
                     )
                     # Отправляем уведомление
-                    send_telegram_message(replied_message.user.telegram_id, notif_text)
+                    send_telegram_notification(replied_message.user.telegram_id, notif_text)
 
             db.session.commit()
             return redirect(url_for('chat', project_id=project.id))
@@ -221,7 +202,8 @@ def chat(project_id):
                 'username': msg.reply_to.user.username if msg.reply_to and msg.reply_to.user else 'Unknown'
             } if msg.reply_to else None
         })
-
+    if User.query.get(session['user_id']) == None:
+        return redirect(url_for('logout'))
     return render_template(
         "chat.html",
         messages=messages_data,
@@ -268,7 +250,7 @@ def get_new_messages(project_id):
 
 
 def send_telegram_notification(telegram_id, message_text):
-    TOKEN = ''
+    TOKEN = '7856201686:AAH8fwWtg566H7A-aLDTifteHmvStraUMw4'
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {
         'chat_id': telegram_id,
@@ -281,7 +263,7 @@ def send_telegram_notification(telegram_id, message_text):
         response.raise_for_status()
     except requests.exceptions.RequestException as e:
         print(f"[Telegram] Ошибка при отправке: {e}")
-
+#send_telegram_notification(815480347, "РАБотает") #отправляе
 
 with app.app_context():
     db.create_all()
@@ -301,7 +283,7 @@ with app.app_context():
         ]
         db.session.bulk_save_objects(example_projects)
         db.session.commit()
-        # Создаем чаты для каждого проекта
+
         for project in Project.query.all():
             chat = Chat(project_id=project.id)
             db.session.add(chat)

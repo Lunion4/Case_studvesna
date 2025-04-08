@@ -18,7 +18,6 @@ def send_telegram_message(telegram_id, text):
     except Exception as e:
         print(f"Ошибка при отправке Telegram-сообщения: {e}")
 
-
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     telegram_id = message.from_user.id

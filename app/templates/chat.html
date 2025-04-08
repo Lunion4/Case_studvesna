@@ -9,7 +9,6 @@
         html, body {
             height: 100%;
             margin: 0;
-            font-family: Arial, sans-serif;
         }
 
         body {
@@ -19,11 +18,11 @@
 
         .content-wrapper {
             flex: 1;
-            margin-top: 70px;
             display: flex;
             justify-content: center;
             align-items: stretch;
             overflow: hidden;
+            margin-top: 70px;
         }
 
         #chat-container {
@@ -35,6 +34,7 @@
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: calc(100vh - 100px);
         }
 
         #messages {
@@ -42,15 +42,37 @@
             overflow-y: auto;
             margin-bottom: 15px;
             padding-right: 10px;
+            position: relative;
         }
 
         .message {
             display: flex;
+            align-items: flex-end;
             margin-bottom: 10px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .message.other { justify-content: flex-start; }
         .message.self { justify-content: flex-end; }
+
+        .avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
 
         .message .content {
             background-color: #f1f1f1;
@@ -64,7 +86,7 @@
         .message.self .content { background-color: #cce5ff; }
         .message.other .content { background-color: #d4edda; }
 
-        .message .reply-preview {
+        .reply-preview {
             font-size: 0.85em;
             background-color: #eee;
             border-left: 3px solid #666;
@@ -79,12 +101,8 @@
             margin-top: 4px;
         }
 
-        .message:hover { cursor: pointer; opacity: 0.95; }
-
         .message-input-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            margin-top: auto;
         }
 
         .replying-to-box {
@@ -101,12 +119,47 @@
             border: none;
             background: none;
         }
+
+        #scroll-down-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
-    <a class="navbar-brand ms-3" href="{{ url_for('get_projects') }}">Платформа</a>
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{{ url_for('get_projects') }}">Платформа</a>
+
+    <!-- Кнопка-бургер -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Контейнер ссылок -->
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('get_projects') }}">Главная</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('add_project') }}">Добавить проект</a>
+        </li>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a href="/profile" class="btn btn-success">
+            Профиль
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
 </nav>
+
 
 <div class="content-wrapper">
     <div id="chat-container">
@@ -115,6 +168,9 @@
         <div id="messages">
             {% for message in messages %}
                 <div class="message {% if message.username == username %}self{% else %}other{% endif %}" onclick="setReply({{ message.id }}, '{{ message.username }}', '{{ message.content|e }}')">
+                    {% if message.username != username %}
+                        <div class="avatar">{{ message.username[0] }}</div>
+                    {% endif %}
                     <div class="content">
                         {% if message.reply_to %}
                         <div class="reply-preview">
@@ -127,36 +183,58 @@
                     </div>
                 </div>
             {% endfor %}
+
+            <button id="scroll-down-btn" class="btn btn-primary d-none" onclick="scrollToBottom()">
+                ↓ Новые сообщения
+            </button>
         </div>
 
-        <form method="POST">
-            <div class="message-input-container">
-                <div id="replying-to" style="display: none;" class="replying-to-box">
-                    Ответ на <span id="reply-username"></span>: <em id="reply-text"></em>
-                    <button type="button" class="btn-cancel-reply" onclick="clearReply()">× Отменить</button>
-                </div>
-                <input type="hidden" name="reply_to_id" id="reply_to_id">
-                <div class="d-flex">
-                    <textarea class="form-control me-2" name="message" id="message-input" placeholder="Напишите сообщение..." required></textarea>
-                    <button type="submit" class="btn btn-primary">➤</button>
-                </div>
+        <form method="POST" class="message-input-container">
+            <div id="replying-to" style="display: none;" class="replying-to-box">
+                Ответ на <span id="reply-username"></span>: <em id="reply-text"></em>
+                <button type="button" class="btn-cancel-reply" onclick="clearReply()">× Отменить</button>
+            </div>
+            <input type="hidden" name="reply_to_id" id="reply_to_id">
+            <div class="d-flex">
+                <textarea class="form-control me-2" name="message" id="message-input" placeholder="Напишите сообщение..." required></textarea>
+                <button type="submit" class="btn btn-primary">➤</button>
             </div>
         </form>
     </div>
 </div>
 
+<audio id="new-message-sound" src="{{ url_for('static', filename='sounds/notify.mp3') }}" preload="auto"></audio>
+
 <script>
+    document.getElementById('message-input').focus();
+
     function setReply(id, username, content) {
         document.getElementById('replying-to').style.display = 'block';
         document.getElementById('reply_to_id').value = id;
         document.getElementById('reply-username').textContent = username;
         document.getElementById('reply-text').textContent = content.slice(0, 100);
+        document.getElementById('message-input').focus();
     }
 
     function clearReply() {
         document.getElementById('replying-to').style.display = 'none';
         document.getElementById('reply_to_id').value = '';
     }
+
+    const messagesContainer = document.getElementById('messages');
+    const scrollBtn = document.getElementById('scroll-down-btn');
+
+    function scrollToBottom() {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        scrollBtn.classList.add('d-none');
+    }
+
+    messagesContainer.addEventListener('scroll', () => {
+        const atBottom = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 50;
+        if (atBottom) {
+            scrollBtn.classList.add('d-none');
+        }
+    });
 
     document.getElementById('message-input').addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -168,17 +246,23 @@
     let lastMessageId = {{ messages[-1].id if messages else 0 }};
 
     async function fetchNewMessages() {
+        const sound = document.getElementById('new-message-sound');
+        sound.volume = 0.02;
+
         try {
             const response = await fetch(`{{ url_for('get_new_messages', project_id=project_id) }}?after_id=${lastMessageId}`);
             const newMessages = await response.json();
 
             if (newMessages.length > 0) {
-                const messagesContainer = document.getElementById('messages');
+                const atBottom = messagesContainer.scrollTop + messagesContainer.clientHeight >= messagesContainer.scrollHeight - 50;
 
                 newMessages.forEach(msg => {
                     const div = document.createElement('div');
                     div.className = 'message ' + (msg.username === '{{ username }}' ? 'self' : 'other');
+                    const avatar = msg.username === '{{ username }}' ? '' : `<div class="avatar">${msg.username[0]}</div>`;
+
                     div.innerHTML = `
+                        ${avatar}
                         <div class="content" onclick="setReply(${msg.id}, '${msg.username}', '${msg.content.replace(/'/g, "\\'")}')">
                             ${msg.reply_to ? `<div class="reply-preview">${msg.reply_to.username}: ${msg.reply_to.content}</div>` : ''}
                             <strong>${msg.username}</strong><br>
@@ -190,11 +274,23 @@
                     lastMessageId = msg.id;
                 });
 
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                sound.play();
+
+                // Прокрутка вниз для отправителя
+                if (newMessages.some(msg => msg.username === '{{ username }}')) {
+                    scrollToBottom();
+                } else if (!atBottom) {
+                    scrollBtn.classList.remove('d-none');
+                }
             }
         } catch (error) {
             console.error('Ошибка загрузки сообщений:', error);
         }
+    }
+
+    // Автоскролл при загрузке страницы (если отправитель)
+    window.onload = function () {
+        scrollToBottom();
     }
 
     setInterval(fetchNewMessages, 3000);
