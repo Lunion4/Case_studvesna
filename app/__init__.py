@@ -153,10 +153,11 @@ def logout():
 
 @app.route('/projects')
 def get_projects():
-    if User.query.get(session['user_id']) == None:
-        return redirect(url_for('logout'))
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    if User.query.get(session['user_id']) == None:
+        return redirect(url_for('logout'))
+
 
     projects = Project.query.all()
     return render_template('projects.html', projects=projects)
@@ -166,6 +167,8 @@ def get_projects():
 def chat(project_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    if User.query.get(session['user_id']) == None:
+        return redirect(url_for('logout'))
 
     user = db.session.get(User, session['user_id'])
     project = db.session.get(Project, project_id)
@@ -228,8 +231,6 @@ def chat(project_id):
                 'username': msg.reply_to.user.username if msg.reply_to and msg.reply_to.user else 'Unknown'
             } if msg.reply_to else None
         })
-    if User.query.get(session['user_id']) == None:
-        return redirect(url_for('logout'))
     return render_template(
         "chat.html",
         messages=messages_data,
