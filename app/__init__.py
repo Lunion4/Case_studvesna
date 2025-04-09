@@ -6,10 +6,8 @@ from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
 import os
 
-TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-
 load_dotenv()
-
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///platform.db')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret')
@@ -35,7 +33,7 @@ def send_telegram_notification(telegram_id, message_text):
         print(f"[Telegram] Ошибка при отправке: {e}")
 
 
-send_telegram_notification(815480347, f"РАБотает {TOKEN}") #отправляе
+#send_telegram_notification(815480347, f"РАБотает") #отправляе
 
 
 @app.route('/add_project', methods=['POST', 'GET'])
