@@ -199,13 +199,11 @@ def chat(project_id):
                 replied_message = Message.query.get(reply_to_id)
                 if replied_message and replied_message.user and replied_message.user.telegram_id:
                     # Формируем текст уведомления
-                    if User.query.get(session['user_id']) == None:
-                        return redirect(url_for('logout'))
                     answer_author = user.username
                     notif_text = (
                         f"💬 <b>{answer_author}</b> ответил(а) на ваше сообщение в чате «{project.name}»:\n\n"
                         f"<blockquote>{replied_message.content}</blockquote>\n\n"
-                        f"{content}"
+                        f"— {content}"
                     )
                     # Отправляем уведомление
                     send_telegram_notification(replied_message.user.telegram_id, notif_text)
