@@ -6,6 +6,8 @@ from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
 import os
 
+TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -19,7 +21,6 @@ from .forms import ProjectForm
 
 
 def send_telegram_notification(telegram_id, message_text):
-    TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {
         'chat_id': telegram_id,
@@ -34,7 +35,7 @@ def send_telegram_notification(telegram_id, message_text):
         print(f"[Telegram] Ошибка при отправке: {e}")
 
 
-#send_telegram_notification(815480347, "РАБотает") #отправляе
+send_telegram_notification(815480347, f"РАБотает {TOKEN}") #отправляе
 
 
 @app.route('/add_project', methods=['POST', 'GET'])
