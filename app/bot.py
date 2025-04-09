@@ -24,6 +24,7 @@ def handle_start(message):
 
         if response.status_code == 200:
             bot.send_message(telegram_id, "✅ Ваш Telegram успешно привязан!")
+            bot.send_message(telegram_id, "Обратно на сайт: https://opensource.pythonanywhere.com/profile")
             tx = f"""Новый пользователь в системе:
                             message.from_user.id: {message.from_user.id}
                             message.from_user.is_bot: {message.from_user.is_bot}
