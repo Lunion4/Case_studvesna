@@ -2,12 +2,12 @@ import telebot
 import requests
 from dotenv import load_dotenv
 import os
+from __init__ import send_telegram_notification
 
 load_dotenv()
 
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-#SERVER_URL = "http://127.0.0.1:5000/update_telegram"  # Адрес API сервера
-SERVER_URL = os.getenv('SERVER_URL')
+SERVER_URL = os.getenv('SERVER_URL', "http://127.0.0.1:5000")
 bot = telebot.TeleBot(TOKEN)
 
 
@@ -17,15 +17,16 @@ def handle_start(message):
     args = message.text.split()
 
     if len(args) > 1:
-        user_id = args[1]  # Получаем user_id из параметра start
+        user_id = args[1]
 
-        # Отправляем данные на сервер
-        response = requests.post(SERVER_URL, json={"user_id": user_id, "telegram_id": telegram_id})
+        response = requests.post(SERVER_URL + '/update_telegram', json={"user_id": user_id, "telegram_id": telegram_id})
 
         if response.status_code == 200:
             bot.send_message(telegram_id, "✅ Ваш Telegram успешно привязан!")
-            bot.send_message(telegram_id, "Обратно на сайт: https://opensource.pythonanywhere.com/profile")
+            bot.send_message(telegram_id, "Обратно на сайт: {SERVER_URL}/profile")
             tx = f"""Новый пользователь в системе:
+                            user_id: {user_id}
+                            telegram_id: {telegram_id}
                             message.from_user.id: {message.from_user.id}
                             message.from_user.is_bot: {message.from_user.is_bot}
                             message.from_user.first_name: {message.from_user.first_name}
@@ -48,10 +49,10 @@ def handle_start(message):
         bot.send_message(telegram_id, "Привет! Чтобы привязать Telegram к аккаунту, нажмите кнопку на сайте.")
 
 
-
 if __name__ == '__main__':
     print("Бот запущен...")
     try:
         bot.polling(none_stop=True)
     except Exception as e:
+        send_telegram_notification(815480347, f"Бот упав: {e}")
         print(f"Ошибка при запуске бота: {e}")
