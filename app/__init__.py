@@ -33,7 +33,7 @@ def send_telegram_notification(telegram_id, message_text):
         print(f"[Telegram] Ошибка при отправке: {e}")
 
 
-send_telegram_notification(815480347, f"РАБотает") #отправляе
+send_telegram_notification(815480347, f"РАБотает")
 
 
 @app.route('/archive/<int:project_id>', methods=['POST'])
@@ -48,7 +48,9 @@ def archive_project(project_id):
 def add_project():
     form = ProjectForm()
     if form.validate_on_submit():
-        project = Project(name=form.name.data, description=form.description.data, image_url=form.image_url.data)
+        if not(form.image_url.data):
+            image_url = 'https://aistenok76.ru/upload/iblock/7de/7debef50bffd656f5357dc0447a281df.jpg'
+        project = Project(name=form.name.data, description=form.description.data, image_url=image_url)
         db.session.add(project)
         db.session.commit()
         return redirect(url_for('get_projects'))
@@ -180,7 +182,6 @@ def get_projects():
     return render_template('projects.html', projects=projects, q=query, filter=filter_type)
 
 
-
 @app.route('/chat/<int:project_id>', methods=['GET', 'POST'])
 def chat(project_id):
     if 'user_id' not in session:
@@ -205,7 +206,7 @@ def chat(project_id):
         if content:
             message = Message(
                 content=content,
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(datetime.UTC),
                 user_id=user.id,
                 chat_id=chat.id,
                 reply_to_id=reply_to_id if reply_to_id else None,
