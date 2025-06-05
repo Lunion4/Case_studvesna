@@ -1,6 +1,7 @@
 import telebot
 import requests
-from dotenv import load_dotenv
+from dotenv import load_dotenvа
+from telebot import types
 import os
 
 load_dotenv()
@@ -21,8 +22,10 @@ def handle_start(message):
         response = requests.post(SERVER_URL + '/update_telegram', json={"user_id": user_id, "telegram_id": telegram_id})
 
         if response.status_code == 200:
-            bot.send_message(telegram_id, "✅ Ваш Telegram успешно привязан!")
-            bot.send_message(telegram_id, "Обратно на сайт: {SERVER_URL}/profile")
+            keyboard = types.InlineKeyboardMarkup()
+            button = types.InlineKeyboardButton(text="🔗 Обратно на сайт", url=f"{SERVER_URL}/profile")
+            keyboard.add(button)
+            bot.send_message(telegram_id, "✅ Ваш Telegram успешно привязан!", reply_markup=keyboard)
             tx = f"""Новый пользователь в системе:
                             user_id: {user_id}
                             telegram_id: {telegram_id}
