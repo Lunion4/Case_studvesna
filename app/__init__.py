@@ -34,7 +34,7 @@ def send_telegram_notification(telegram_id, message_text):
         print(f"[Telegram] Ошибка при отправке: {e}")
 
 
-send_telegram_notification(815480347, f"РАБотает {SERVER_URL}")
+send_telegram_notification(815480347, f"Сервер запущен {SERVER_URL}")
 
 
 @app.route('/archive/<int:project_id>', methods=['POST'])
