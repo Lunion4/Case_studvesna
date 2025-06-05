@@ -1,6 +1,6 @@
 import telebot
 import requests
-from dotenv import load_dotenvа
+from dotenv import load_dotenv
 from telebot import types
 import os
 
