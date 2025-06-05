@@ -33,7 +33,15 @@ def send_telegram_notification(telegram_id, message_text):
         print(f"[Telegram] Ошибка при отправке: {e}")
 
 
-#send_telegram_notification(815480347, f"РАБотает") #отправляе
+send_telegram_notification(815480347, f"РАБотает") #отправляе
+
+
+@app.route('/archive/<int:project_id>', methods=['POST'])
+def archive_project(project_id):
+    project = Project.query.get_or_404(project_id)
+    project.is_archived = True
+    db.session.commit()
+    return redirect(url_for('get_projects'))
 
 
 @app.route('/add_project', methods=['POST', 'GET'])
