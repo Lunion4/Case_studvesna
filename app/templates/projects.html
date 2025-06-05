@@ -7,13 +7,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
         .card-img-top {
-            height: 200px; /* Фиксированная высота для изображений */
-            object-fit: cover; /* Без искажения */
+            height: 200px;
+            object-fit: cover;
         }
 
         .card-body {
-            height: 220px; /* Фиксированная высота для блока с текстом */
-            overflow: hidden; /* Обрезать текст, если его слишком много */
+            height: 220px;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -24,7 +24,14 @@
         }
 
         .card-body .btn {
-            margin-top: auto; /* Кнопка будет на нижней части карточки */
+            margin-top: auto;
+        }
+
+        .archive-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 10;
         }
     </style>
 </head>
@@ -33,13 +40,11 @@
   <div class="container-fluid">
     <a class="navbar-brand" href="{{ url_for('get_projects') }}">ПроЧат</a>
 
-    <!-- Кнопка-бургер -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <!-- Контейнер ссылок -->
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav me-auto">
         <li class="nav-item">
@@ -51,24 +56,38 @@
       </ul>
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a href="/profile" class="btn btn-success">
-            Профиль
-          </a>
+          <a href="/profile" class="btn btn-success">Профиль</a>
         </li>
       </ul>
     </div>
   </div>
 </nav>
 
+<div class="container" style="margin-top: 80px;">
+  <h1 class="mb-4 text-center">Список проектов</h1>
 
+  <!-- Форма поиска -->
+  <form method="GET" action="{{ url_for('get_projects') }}" class="mb-4 d-flex justify-content-center">
+    <div class="col-md-3">
+      <select name="filter" class="form-select">
+        <option value="active" {% if filter == 'active' %}selected{% endif %}>Только активные</option>
+        <option value="archived" {% if filter == 'archived' %}selected{% endif %}>Только архивированные</option>
+        <option value="all" {% if filter == 'all' %}selected{% endif %}>Все проекты</option>
+      </select>
+    </div>
+    <input type="text" name="q" class="form-control w-50 me-2" placeholder="Поиск по имени проекта" value="{{ request.args.get('q', '') }}">
+    <button type="submit" class="btn btn-outline-primary">Поиск</button>
+  </form>
 
-<h1 class="mb-4 text-center">Список проектов</h1>
-
-<div class="container">
   <div class="row">
     {% for project in projects %}
       <div class="col-md-4 mb-4">
-        <div class="card shadow-sm">
+        <div class="card shadow-sm" style="position: relative;">
+          <!-- Кнопка архивирования -->
+          <form action="{{ url_for('archive_project', project_id=project.id) }}" method="POST" class="archive-button">
+            <button type="submit" class="btn btn-sm btn-outline-secondary" title="Архивировать" onclick="return confirm('Архивировать этот проект?')">📦</button>
+          </form>
+
           <img src="{{ project.image_url or 'https://via.placeholder.com/400x200' }}" class="card-img-top" alt="Project Image">
           <div class="card-body">
             <h5 class="card-title">{{ project.name }}</h5>

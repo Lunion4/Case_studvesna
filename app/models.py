@@ -12,6 +12,7 @@ class Project(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
     image_url = db.Column(db.String(255), nullable=True)
+    is_archived = db.Column(db.Boolean, default=False)
 
 
 class Chat(db.Model):

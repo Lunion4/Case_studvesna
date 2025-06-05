@@ -154,12 +154,23 @@ def logout():
 def get_projects():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    if User.query.get(session['user_id']) == None:
+    if User.query.get(session['user_id']) is None:
         return redirect(url_for('logout'))
 
+    query = request.args.get('q', '').strip()
+    filter_type = request.args.get('filter', 'active')
 
-    projects = Project.query.all()
-    return render_template('projects.html', projects=projects)
+    q = Project.name.ilike(f"%{query}%") if query else True
+
+    if filter_type == 'archived':
+        projects = Project.query.filter(Project.is_archived == True, q).all()
+    elif filter_type == 'all':
+        projects = Project.query.filter(q).all()
+    else:
+        projects = Project.query.filter(Project.is_archived == False, q).all()
+
+    return render_template('projects.html', projects=projects, q=query, filter=filter_type)
+
 
 
 @app.route('/chat/<int:project_id>', methods=['GET', 'POST'])
