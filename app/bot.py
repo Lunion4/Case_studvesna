@@ -2,7 +2,6 @@ import telebot
 import requests
 from dotenv import load_dotenv
 import os
-from __init__ import send_telegram_notification
 
 load_dotenv()
 
@@ -54,5 +53,5 @@ if __name__ == '__main__':
     try:
         bot.polling(none_stop=True)
     except Exception as e:
-        send_telegram_notification(815480347, f"Бот упав: {e}")
+        bot.send_message(815480347, f"Бот упав: {e}")
         print(f"Ошибка при запуске бота: {e}")
