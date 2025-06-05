@@ -50,6 +50,7 @@ def handle_start(message):
 
 if __name__ == '__main__':
     print("Бот запущен...")
+    bot.send_message(815480347, f"Хендлер запущен {SERVER_URL}")
     try:
         bot.polling(none_stop=True)
     except Exception as e:
