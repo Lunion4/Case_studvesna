@@ -11,6 +11,7 @@ TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///platform.db')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default_secret')
+SERVER_URL = os.getenv('SERVER_URL', "http://127.0.0.1:5000")
 db = SQLAlchemy(app)
 
 from . import models
