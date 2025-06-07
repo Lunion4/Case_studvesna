@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, UTC
 import requests
 from sqlalchemy.orm import joinedload
 from dotenv import load_dotenv
@@ -207,7 +207,7 @@ def chat(project_id):
         if content:
             message = Message(
                 content=content,
-                timestamp=datetime.now(datetime.UTC),
+                timestamp=datetime.now(UTC),
                 user_id=user.id,
                 chat_id=chat.id,
                 reply_to_id=reply_to_id if reply_to_id else None,
