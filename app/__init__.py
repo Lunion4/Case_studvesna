@@ -51,6 +51,8 @@ def add_project():
     if form.validate_on_submit():
         if not(form.image_url.data):
             image_url = 'https://aistenok76.ru/upload/iblock/7de/7debef50bffd656f5357dc0447a281df.jpg'
+        else:
+            image_url = form.image_url.data
         project = Project(name=form.name.data, description=form.description.data, image_url=image_url)
         db.session.add(project)
         db.session.commit()
